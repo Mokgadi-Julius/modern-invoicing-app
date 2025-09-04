@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection rules
+    match /users/{userId} {
+      // Allow users to create their own user document during registration
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId;
+      
+      // Allow users to read their own profile
+      allow read: if request.auth != null 
+                  && request.auth.uid == userId;
+      
+      // Allow users to update their own profile (except role and status)
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && !('role' in request.resource.data.diff(resource.data).affectedKeys())
+                    && !('status' in request.resource.data.diff(resource.data).affectedKeys());
+      
+      // Allow admins to read all user documents
+      allow read: if request.auth != null 
+                  && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                  && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Allow admins to update user status and approval fields
+      allow update: if request.auth != null 
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'approvedAt', 'approvedBy']);
+    }
+    
+    // Allow anyone to check if any admin exists (for setup page)
+    match /users/{userId} {
+      allow read: if resource.data.role == 'admin';
+    }
+    
+    // Invoices collection rules
+    match /invoices/{invoiceId} {
+      // Allow authenticated approved users to read/write their own invoices
+      allow read, write: if request.auth != null 
+                         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                         && request.auth.uid == resource.data.userId;
+      
+      // Allow creating invoices if user is approved
+      allow create: if request.auth != null 
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                    && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Customers collection rules
+    match /customers/{customerId} {
+      // Allow authenticated approved users to read/write their own customers
+      allow read, write: if request.auth != null 
+                         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                         && request.auth.uid == resource.data.userId;
+      
+      // Allow creating customers if user is approved
+      allow create: if request.auth != null 
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                    && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Products collection rules
+    match /products/{productId} {
+      // Allow authenticated approved users to read/write their own products
+      allow read, write: if request.auth != null 
+                         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                         && request.auth.uid == resource.data.userId;
+      
+      // Allow creating products if user is approved
+      allow create: if request.auth != null 
+                    && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved'
+                    && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
