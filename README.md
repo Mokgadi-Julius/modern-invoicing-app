@@ -127,7 +127,7 @@ src/
    VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id_here
    VITE_FIREBASE_APP_ID=your_app_id_here
    VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id_here
-   
+
    # Admin Setup Key (change to your own secure key)
    VITE_ADMIN_SETUP_KEY=your_secure_setup_key_here
    ```
@@ -248,13 +248,3 @@ For questions or customization requests:
 ✅ **Dark/Light Theme Support**
 
 ---
-
-Built with ❤️ using modern web technologies for professional invoice management.
-
-1. First-time Setup:
-
-- Visit the app - you'll see an "Admin Setup" link on login/signup pages
-- Click "Admin Setup" → /admin-setup
-- Enter setup key: SETUP_ADMIN_2025
-- Create your admin account
-- Setup page becomes disabled automatically
