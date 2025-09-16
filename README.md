@@ -2,7 +2,9 @@
 
 A comprehensive, modern invoicing application built with React, TypeScript, and Tailwind CSS. This application provides all the features needed for professional invoice management, customer relationship management, and business analytics.
 
-![InvoiceWrite Now](./applook.png)
+**Live Application**: https://invoicewritenow.writenowagency.com
+
+![InvoiceWrite Now](./public/logo.png)
 
 ## 🚀 Features
 
@@ -201,6 +203,34 @@ The application is built as a static SPA and can be deployed to any static hosti
    - Vercel, Netlify, GitHub Pages
    - AWS S3 + CloudFront
    - Traditional web hosting
+
+### Live Deployment
+
+The application is currently deployed at: https://invoicewritenow.writenowagency.com
+
+### Firebase Deployment
+
+This application is configured for Firebase deployment:
+
+1. **Install Firebase CLI**
+   ```bash
+   npm install -g firebase-tools
+   ```
+
+2. **Login to Firebase**
+   ```bash
+   firebase login
+   ```
+
+3. **Deploy to Firebase**
+   ```bash
+   firebase deploy
+   ```
+
+Configuration files:
+- `firebase.json`: Firebase hosting and configuration
+- `firestore.rules`: Database security rules
+- `.firebaserc`: Project configuration
 
 ## 🔐 Security & Privacy
 
