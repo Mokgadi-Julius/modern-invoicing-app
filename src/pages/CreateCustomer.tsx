@@ -5,7 +5,7 @@ import { ArrowLeftIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 
 export const CreateCustomer: React.FC = () => {
   const navigate = useNavigate();
-  const { addCustomer } = useApp();
+  const { createCustomer } = useApp();
   
   const [customerData, setCustomerData] = useState({
     name: '',
@@ -19,7 +19,7 @@ export const CreateCustomer: React.FC = () => {
     setCustomerData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!customerData.name || !customerData.email) {
@@ -27,7 +27,7 @@ export const CreateCustomer: React.FC = () => {
       return;
     }
 
-    addCustomer({
+    await createCustomer({
       ...customerData,
       totalInvoices: 0,
       totalAmount: 0,

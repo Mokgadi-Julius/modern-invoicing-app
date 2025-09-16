@@ -5,6 +5,15 @@ export interface CompanyDetails {
   phone: string;
 }
 
+export interface BankingDetails {
+  bankName: string;
+  accountName: string;
+  accountNumber: string;
+  routingNumber: string;
+  swift?: string;
+  reference?: string;
+}
+
 export interface LineItem {
   id: string;
   description: string;
@@ -22,6 +31,7 @@ export interface Customer {
   createdAt: string;
   totalInvoices: number;
   totalAmount: number;
+  userId: string;
 }
 
 export interface Product {
@@ -32,6 +42,7 @@ export interface Product {
   category: string;
   taxRate: number;
   createdAt: string;
+  userId: string;
 }
 
 export interface ProductTemplate {
@@ -42,6 +53,7 @@ export interface ProductTemplate {
   category: string;
   totalPrice: number;
   createdAt: string;
+  userId: string;
 }
 
 export type InvoiceStatus = 'draft' | 'sent' | 'viewed' | 'paid' | 'overdue' | 'cancelled';
@@ -71,9 +83,14 @@ export interface Invoice {
   updatedAt: string;
   paidAt?: string;
   sentAt?: string;
+  bankingDetails?: BankingDetails;
+  includeBankingDetails: boolean;
+  templateId: TemplateId;
+  userId: string;
 }
 
-export type TemplateId = 'classic' | 'modern' | 'creative';
+export type TemplateId = 'classic' | 'modern' | 'creative' | 'writenow' | 'premium';
+export type SavedInvoice = Invoice;
 
 export interface TemplateOption {
   id: TemplateId;

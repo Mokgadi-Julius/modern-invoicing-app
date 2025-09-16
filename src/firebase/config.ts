@@ -1,17 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
+import { firebaseConfig, validateFirebaseConfig, log, isDevelopment } from '../config';
 
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+// Validate Firebase configuration before initializing
+try {
+  validateFirebaseConfig();
+  log.info('Firebase configuration validated successfully');
+} catch (error) {
+  log.error('Firebase configuration validation failed:', error);
+  throw error;
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -21,5 +21,30 @@ export const auth = getAuth(app);
 
 // Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
+
+// Initialize Cloud Functions and get a reference to the service
+export const functions = getFunctions(app);
+
+// Log successful initialization
+log.info('Firebase services initialized successfully');
+
+// Network status utilities
+export const getNetworkStatus = () => {
+  return navigator.onLine;
+};
+
+export const onNetworkStatusChange = (callback: (isOnline: boolean) => void) => {
+  const handleOnline = () => callback(true);
+  const handleOffline = () => callback(false);
+  
+  window.addEventListener('online', handleOnline);
+  window.addEventListener('offline', handleOffline);
+  
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('online', handleOnline);
+    window.removeEventListener('offline', handleOffline);
+  };
+};
 
 export default app;

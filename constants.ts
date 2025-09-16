@@ -1,10 +1,19 @@
-import { Invoice, TemplateOption, TemplateId } from './types';
+import { Invoice, TemplateOption, TemplateId, BankingDetails } from './src/types';
 
 export const initialCompanyDetails = {
   name: '',
   address: '',
   email: '',
   phone: '',
+};
+
+export const initialBankingDetails: BankingDetails = {
+  bankName: 'Capitec Business Account',
+  accountName: 'Your Company Name',
+  accountNumber: '1054 0348 18',
+  routingNumber: '450105',
+  swift: '',
+  reference: 'Please use your invoice number as reference',
 };
 
 export const initialInvoiceData: Invoice = {
@@ -26,12 +35,16 @@ export const initialInvoiceData: Invoice = {
   taxAmount: 0, // Will be calculated
   discountAmount: 0, // Will be calculated
   total: 0, // Will be calculated
+  bankingDetails: { ...initialBankingDetails },
+  includeBankingDetails: false, // Default to not showing banking details
 };
 
 export const TEMPLATES: TemplateOption[] = [
   { id: 'classic', name: 'Classic Professional' },
   { id: 'modern', name: 'Modern Minimalist' },
   { id: 'creative', name: 'Creative Touch' },
+  { id: 'writenow', name: 'Writenow Professional' },
+  { id: 'premium', name: 'Premium Designer' },
 ];
 
 export const defaultLogoPlaceholder = "https://picsum.photos/seed/logo/200/100?grayscale";

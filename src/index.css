@@ -2,9 +2,132 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Global overflow fixes */
+html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* Prevent horizontal scroll */
+* {
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  max-width: 100%;
+}
+
+/* Custom responsive utilities */
+@layer utilities {
+  .xs\:grid-cols-2 {
+    @media (min-width: 475px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  
+  /* Touch-friendly sizing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile-specific text sizes */
+  .text-mobile-xs {
+    font-size: 10px;
+    line-height: 14px;
+  }
+  
+  .text-mobile-sm {
+    font-size: 12px;
+    line-height: 16px;
+  }
+  
+  /* Enhanced design utilities */
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  
+  .shadow-soft {
+    box-shadow: 0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04);
+  }
+  
+  .shadow-elegant {
+    box-shadow: 0 4px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-border {
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #667eea, #764ba2) border-box;
+    border: 2px solid transparent;
+  }
+}
+
 /* Additional custom styles */
 .bg-slate-750 {
   background-color: rgb(51 65 85 / var(--tw-bg-opacity));
+}
+
+/* Mobile-specific utility classes */
+@layer utilities {
+  .mobile-safe-area {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .mobile-compact {
+    @media (max-width: 640px) {
+      font-size: 0.875rem;
+      padding: 0.5rem;
+      gap: 0.5rem;
+    }
+  }
+  
+  .mobile-text-xs {
+    @media (max-width: 640px) {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+  }
+  
+  .no-horizontal-scroll {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+  }
+  
+  .mobile-container {
+    @media (max-width: 640px) {
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
+    }
+  }
 }
 
 /* Print styles */
@@ -44,6 +167,17 @@
   .print\:overflow-visible {
     overflow: visible !important;
   }
+  
+  /* Ensure proper scaling on print */
+  @page {
+    margin: 0.5in;
+    size: A4;
+  }
+  
+  body {
+    font-size: 12pt;
+    line-height: 1.4;
+  }
 }
 
 /* Scrollbar styling for dark theme */
@@ -80,9 +214,21 @@ textarea:focus {
   outline-offset: 2px;
 }
 
-/* Animation for loading states */
+/* Enhanced animations */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes pulse {
@@ -94,10 +240,168 @@ textarea:focus {
   }
 }
 
+@keyframes slideUp {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Transition improvements */
 * {
   transition-duration: 150ms;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  /* Reduce font sizes for better mobile readability */
+  body {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  /* Improve touch targets */
+  button, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Better scrolling on mobile */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Better table responsiveness */
+  table {
+    font-size: 12px;
+  }
+  
+  /* Optimize spacing for mobile */
+  .space-y-8 > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 1.5rem;
+  }
+  
+  /* Better mobile padding */
+  .p-4 {
+    padding: 0.75rem;
+  }
+  
+  .p-6 {
+    padding: 1rem;
+  }
+  
+  /* Smaller gaps on mobile */
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  .gap-6 {
+    gap: 0.75rem;
+  }
+  
+  /* Mobile friendly margins */
+  .mb-6 {
+    margin-bottom: 1rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Hide complex animations on mobile for performance */
+  .animate-scale-in,
+  .animate-slide-up {
+    animation: none;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 375px) {
+  /* Even smaller spacing for tiny screens */
+  .p-4 {
+    padding: 0.5rem;
+  }
+  
+  .p-6 {
+    padding: 0.75rem;
+  }
+  
+  .gap-4 {
+    gap: 0.5rem;
+  }
+  
+  .gap-6 {
+    gap: 0.5rem;
+  }
+  
+  /* Smaller text for very small screens */
+  .text-2xl {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  
+  .text-3xl {
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+  
+  .text-4xl {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+  }
+  
+  /* Reduce margins further */
+  .mb-4 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .mb-6 {
+    margin-bottom: 0.75rem;
+  }
+  
+  .mb-8 {
+    margin-bottom: 1rem;
+  }
+  
+  /* Smaller table cells */
+  table {
+    font-size: 10px;
+  }
+  
+  /* Compact form inputs */
+  input, select, textarea {
+    padding: 0.5rem !important;
+    font-size: 14px !important;
+  }
 }
 
 /* Better select styling */
@@ -107,4 +411,117 @@ select {
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
+}
+
+/* Horizontal scroll improvements for mobile */
+.overflow-x-auto {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  height: 4px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: rgb(30 41 59 / 0.3);
+  border-radius: 2px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background: rgb(71 85 105);
+  border-radius: 2px;
+}
+
+/* Improved focus states for mobile */
+@media (max-width: 640px) {
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 3px solid rgb(59 130 246);
+    outline-offset: 1px;
+  }
+  
+  /* Better mobile button sizing */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem;
+  }
+}
+
+/* Loading state optimizations */
+.animate-spin {
+  animation-duration: 1s;
+}
+
+@media (max-width: 640px) {
+  .animate-spin {
+    animation-duration: 0.8s;
+  }
+}
+
+/* Better mobile typography */
+@media (max-width: 640px) {
+  h1, h2, h3, h4, h5, h6 {
+    line-height: 1.3;
+  }
+  
+  p {
+    line-height: 1.5;
+  }
+  
+  /* Force width constraints on mobile */
+  * {
+    max-width: 100vw !important;
+  }
+  
+  div, section, article, main {
+    overflow-x: hidden;
+  }
+}
+
+/* Fix text overflow issues */
+p, span, div {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Input and form element fixes */
+input, textarea, select {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Ensure tables don't break layout */
+table {
+  table-layout: fixed;
+  width: 100%;
+  max-width: 100%;
+}
+
+td, th {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  max-width: 0;
+  hyphens: auto;
+}
+
+/* Prevent layout breaks */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Grid and flex container fixes */
+.grid, .flex {
+  min-width: 0;
+}
+
+.grid > *, .flex > * {
+  min-width: 0;
+  max-width: 100%;
 }

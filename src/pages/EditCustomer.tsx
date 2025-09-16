@@ -6,9 +6,16 @@ import { ArrowLeftIcon, UserIcon } from '@heroicons/react/24/outline';
 export const EditCustomer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { customers, updateCustomer } = useApp();
+  const { customers, updateCustomer, settings } = useApp();
   
   const customer = customers.find(c => c.id === id);
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: settings.currency || 'USD',
+    }).format(amount);
+  };
   
   const [customerData, setCustomerData] = useState({
     name: '',
@@ -34,7 +41,7 @@ export const EditCustomer: React.FC = () => {
     setCustomerData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!customerData.name || !customerData.email) {
@@ -43,8 +50,7 @@ export const EditCustomer: React.FC = () => {
     }
 
     if (customer) {
-      updateCustomer({
-        ...customer,
+      await updateCustomer(customer.id, {
         name: customerData.name,
         email: customerData.email,
         address: customerData.address,
@@ -176,13 +182,13 @@ export const EditCustomer: React.FC = () => {
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-green-400">
-                    ${customer.totalAmount.toLocaleString()}
+                    {formatCurrency(customer.totalAmount)}
                   </p>
                   <p className="text-slate-400 text-sm">Total Revenue</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-blue-400">
-                    {customer.totalInvoices > 0 ? `$${(customer.totalAmount / customer.totalInvoices).toFixed(2)}` : '$0.00'}
+                    {customer.totalInvoices > 0 ? formatCurrency(customer.totalAmount / customer.totalInvoices) : formatCurrency(0)}
                   </p>
                   <p className="text-slate-400 text-sm">Average Invoice</p>
                 </div>

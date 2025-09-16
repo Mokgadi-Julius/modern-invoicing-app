@@ -1,8 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import {
   User,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
   updateProfile
@@ -41,6 +43,7 @@ interface AuthContextType {
   hasAdmin: boolean;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   register: (email: string, password: string, displayName: string, companyName: string) => Promise<void>;
   registerAdmin: (email: string, password: string, displayName: string, companyName: string, setupKey: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -78,17 +81,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Register new user
   const register = async (email: string, password: string, displayName: string, companyName: string) => {
     try {
+      // Input validation
+      if (!email?.trim() || !password?.trim() || !displayName?.trim() || !companyName?.trim()) {
+        throw new Error('All fields are required');
+      }
+      
+      if (password.length < 8) {
+        throw new Error('Password must be at least 8 characters long');
+      }
+      
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update the user's display name
-      await updateProfile(user, { displayName });
+      await updateProfile(user, { displayName: displayName.trim() });
 
       // Create user profile in Firestore
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
-        displayName,
-        companyName,
+        displayName: displayName.trim(),
+        companyName: companyName.trim(),
         role: 'user',
         status: 'pending', // Requires admin approval
         createdAt: new Date().toISOString(),
@@ -104,8 +120,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Register first admin user
   const registerAdmin = async (email: string, password: string, displayName: string, companyName: string, setupKey: string) => {
     try {
+      // Input validation
+      if (!email?.trim() || !password?.trim() || !displayName?.trim() || !companyName?.trim() || !setupKey?.trim()) {
+        throw new Error('All fields are required');
+      }
+      
+      if (password.length < 12) { // Stricter password requirement for admin
+        throw new Error('Admin password must be at least 12 characters long');
+      }
+      
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+
       // Validate setup key
-      if (setupKey !== import.meta.env.VITE_ADMIN_SETUP_KEY) {
+      if (setupKey.trim() !== import.meta.env.VITE_ADMIN_SETUP_KEY) {
         throw new Error('Invalid setup key');
       }
 
@@ -117,14 +146,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       
       // Update the user's display name
-      await updateProfile(user, { displayName });
+      await updateProfile(user, { displayName: displayName.trim() });
 
       // Create admin profile in Firestore
       const userProfile: UserProfile = {
         uid: user.uid,
         email: user.email!,
-        displayName,
-        companyName,
+        displayName: displayName.trim(),
+        companyName: companyName.trim(),
         role: 'admin',
         status: 'approved', // Admin is automatically approved
         createdAt: new Date().toISOString(),
@@ -133,7 +162,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
       };
 
       await setDoc(doc(db, 'users', user.uid), userProfile);
+
+      // Create the admin status document
+      await setDoc(doc(db, 'system', 'admin_status'), { 
+        exists: true,
+        createdAt: new Date().toISOString(),
+        createdBy: user.uid
+      });
+
+      // Update local state immediately
       setHasAdmin(true);
+      setUserProfile(userProfile);
       
     } catch (error: any) {
       throw new Error(error.message);
@@ -144,6 +183,34 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
+    } catch (error: any) {
+      throw new Error(error.message);
+    }
+  };
+
+  // Login with Google
+  const loginWithGoogle = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      const { user } = await signInWithPopup(auth, provider);
+
+      // Check if user profile exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+
+      if (!userDoc.exists()) {
+        // Create user profile for new Google user
+        const userProfile: UserProfile = {
+          uid: user.uid,
+          email: user.email!,
+          displayName: user.displayName || user.email!.split('@')[0],
+          companyName: '', // Will need to be filled later
+          role: 'user',
+          status: 'pending', // Requires admin approval
+          createdAt: new Date().toISOString(),
+        };
+
+        await setDoc(doc(db, 'users', user.uid), userProfile);
+      }
     } catch (error: any) {
       throw new Error(error.message);
     }
@@ -188,32 +255,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Load user profile from Firestore
-  const loadUserProfile = async (uid: string) => {
-    try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        setUserProfile(userDoc.data() as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
-
-  // Check if admin exists
-  const checkAdminExists = async () => {
-    try {
-      const q = query(
-        collection(db, 'users'), 
-        where('role', '==', 'admin')
-      );
-      const snapshot = await getDocs(q);
-      setHasAdmin(!snapshot.empty);
-    } catch (error) {
-      console.error('Error checking admin existence:', error);
-    }
-  };
-
   // Manual refresh for pending users
   const refreshPendingUsers = async () => {
     if (!isAdmin) return;
@@ -236,55 +277,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // Check admin existence on app load
   useEffect(() => {
-    checkAdminExists();
-  }, []);
-
-  // Listen for auth state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    setLoading(true);
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      
-      if (user) {
-        await loadUserProfile(user.uid);
-      } else {
-        setUserProfile(null);
-      }
-      
+    });
+
+    const adminStatusDoc = doc(db, 'system', 'admin_status');
+    const unsubscribeAdminCheck = onSnapshot(adminStatusDoc, (doc) => {
+      setHasAdmin(doc.exists());
       setLoading(false);
     });
 
-    return unsubscribe;
+    return () => {
+      unsubscribeAuth();
+      unsubscribeAdminCheck();
+    };
   }, []);
 
-  // Listen for pending users (admin only)
   useEffect(() => {
-    if (!isAdmin) {
+    if (currentUser) {
+      // Get user profile once
+      const fetchUserProfile = async () => {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists()) {
+            const userProfileData = userDoc.data() as UserProfile;
+            setUserProfile(userProfileData);
+            
+            // If admin, fetch pending users once
+            if (userProfileData.role === 'admin') {
+              // Inline fetch to avoid dependency issues
+              const fetchPendingUsers = async () => {
+                try {
+                  const q = query(collection(db, 'users'), where('status', '==', 'pending'));
+                  const snapshot = await getDocs(q);
+                  const users: UserProfile[] = [];
+                  snapshot.forEach((doc) => {
+                    users.push(doc.data() as UserProfile);
+                  });
+                  setPendingUsers(users);
+                } catch (error) {
+                  console.error('Error fetching pending users:', error);
+                  setPendingUsers([]);
+                }
+              };
+              fetchPendingUsers();
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        }
+      };
+      
+      fetchUserProfile();
+    } else {
+      setUserProfile(null);
       setPendingUsers([]);
-      return;
     }
-
-    console.log('Setting up pending users listener for admin');
-
-    const q = query(
-      collection(db, 'users'), 
-      where('status', '==', 'pending')
-    );
-    
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const users: UserProfile[] = [];
-      snapshot.forEach((doc) => {
-        users.push(doc.data() as UserProfile);
-      });
-      console.log('Pending users updated:', users.length);
-      setPendingUsers(users);
-    }, (error) => {
-      console.error('Error listening for pending users:', error);
-    });
-
-    return unsubscribe;
-  }, [isAdmin]);
+  }, [currentUser]);
 
   const value: AuthContextType = {
     currentUser,
@@ -295,6 +346,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     hasAdmin,
     loading,
     login,
+    loginWithGoogle,
     register,
     registerAdmin,
     logout,

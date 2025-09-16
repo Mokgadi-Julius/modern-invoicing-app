@@ -29,7 +29,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return null;
   }
 
-  if (!isApproved) {
+  // Admin users are always approved, even if there's a timing issue
+  if (!isApproved && !isAdmin) {
     return <PendingApproval />;
   }
 

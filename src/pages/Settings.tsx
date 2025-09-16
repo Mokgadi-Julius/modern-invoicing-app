@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import {
   BuildingOfficeIcon,
   CurrencyDollarIcon,
@@ -12,6 +13,8 @@ import {
 
 export const Settings: React.FC = () => {
   const { settings, updateSettings } = useApp();
+  const { theme, toggleTheme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [activeTab, setActiveTab] = useState<'company' | 'invoice' | 'appearance' | 'notifications'>('company');
   const [formData, setFormData] = useState(settings);
 
@@ -22,9 +25,16 @@ export const Settings: React.FC = () => {
     { id: 'notifications' as const, label: 'Notifications', icon: BellIcon },
   ];
 
-  const handleSave = () => {
-    updateSettings(formData);
-    alert('Settings saved successfully!');
+  const handleSave = async () => {
+    try {
+      // Remove theme from formData since it's managed by ThemeContext
+      const { theme: _, ...settingsToSave } = formData;
+      await updateSettings(settingsToSave);
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    }
   };
 
   const handleInputChange = (field: string, value: any) => {
@@ -101,15 +111,17 @@ export const Settings: React.FC = () => {
     { id: 'classic', name: 'Classic Professional' },
     { id: 'modern', name: 'Modern Minimalist' },
     { id: 'creative', name: 'Creative Touch' },
+    { id: 'writenow', name: 'Writenow Professional' },
+    { id: 'premium', name: 'Premium Designer' },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-slate-100 p-6">
+    <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text.primary} p-6 transition-colors duration-300`}>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Settings</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className={`text-3xl font-bold ${themeClasses.text.primary}`}>Settings</h1>
+          <p className={`${themeClasses.text.muted} mt-1`}>
             Configure your application preferences and business details.
           </p>
         </div>
@@ -117,7 +129,7 @@ export const Settings: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar Navigation */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-4">
+            <div className={`${themeClasses.card} rounded-xl p-4`}>
               <nav className="space-y-2">
                 {tabs.map((tab) => {
                   const IconComponent = tab.icon;
@@ -128,7 +140,9 @@ export const Settings: React.FC = () => {
                       className={`w-full flex items-center px-4 py-3 text-left rounded-lg font-medium transition-colors ${
                         activeTab === tab.id
                           ? 'bg-blue-600 text-white'
-                          : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                          : theme === 'dark'
+                            ? 'text-slate-300 hover:text-white hover:bg-slate-700'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                       }`}
                     >
                       <IconComponent className="w-5 h-5 mr-3" />
@@ -142,7 +156,7 @@ export const Settings: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-8">
+            <div className={`${themeClasses.card} rounded-xl p-8`}>
               {/* Company Details Tab */}
               {activeTab === 'company' && (
                 <div className="space-y-6">
@@ -358,44 +372,48 @@ export const Settings: React.FC = () => {
                 <div className="space-y-6">
                   <div className="flex items-center space-x-3 mb-6">
                     <PaintBrushIcon className="w-6 h-6 text-blue-400" />
-                    <h2 className="text-2xl font-semibold text-white">Appearance</h2>
+                    <h2 className={`text-2xl font-semibold ${themeClasses.text.primary}`}>Appearance</h2>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-4">
+                    <label className={`block text-sm font-medium ${themeClasses.text.secondary} mb-4`}>
                       Theme
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <button
-                        onClick={() => handleInputChange('theme', 'light')}
-                        className={`p-4 rounded-lg border-2 transition-colors ${
-                          formData.theme === 'light'
-                            ? 'border-blue-500 bg-blue-500 bg-opacity-10'
-                            : 'border-slate-600 hover:border-slate-500'
+                        onClick={() => theme !== 'light' && toggleTheme()}
+                        className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                          theme === 'light'
+                            ? 'border-blue-500 bg-blue-500 bg-opacity-10 ring-2 ring-blue-500/20'
+                            : theme === 'dark'
+                              ? 'border-slate-600 hover:border-slate-500'
+                              : 'border-gray-300 hover:border-gray-400'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-white rounded border border-gray-300"></div>
-                          <div>
-                            <p className="font-medium text-white">Light Theme</p>
-                            <p className="text-sm text-slate-400">Clean and bright interface</p>
+                          <div className="w-8 h-8 bg-white rounded border border-gray-300 shadow-sm"></div>
+                          <div className="text-left">
+                            <p className={`font-medium ${themeClasses.text.primary}`}>Light Theme</p>
+                            <p className={`text-sm ${themeClasses.text.muted}`}>Clean and bright interface</p>
                           </div>
                         </div>
                       </button>
 
                       <button
-                        onClick={() => handleInputChange('theme', 'dark')}
-                        className={`p-4 rounded-lg border-2 transition-colors ${
-                          formData.theme === 'dark'
-                            ? 'border-blue-500 bg-blue-500 bg-opacity-10'
-                            : 'border-slate-600 hover:border-slate-500'
+                        onClick={() => theme !== 'dark' && toggleTheme()}
+                        className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+                          theme === 'dark'
+                            ? 'border-blue-500 bg-blue-500 bg-opacity-10 ring-2 ring-blue-500/20'
+                            : theme === 'light'
+                              ? 'border-gray-300 hover:border-gray-400'
+                              : 'border-slate-600 hover:border-slate-500'
                         }`}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 bg-slate-800 rounded border border-slate-600"></div>
-                          <div>
-                            <p className="font-medium text-white">Dark Theme</p>
-                            <p className="text-sm text-slate-400">Easy on the eyes</p>
+                          <div className="w-8 h-8 bg-slate-800 rounded border border-slate-600 shadow-sm"></div>
+                          <div className="text-left">
+                            <p className={`font-medium ${themeClasses.text.primary}`}>Dark Theme</p>
+                            <p className={`text-sm ${themeClasses.text.muted}`}>Easy on the eyes</p>
                           </div>
                         </div>
                       </button>

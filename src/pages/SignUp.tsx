@@ -100,7 +100,7 @@ export const SignUp: React.FC = () => {
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+            <div className="w-12 h-12 bg-slate-800 rounded-xl flex items-center justify-center">
               <DocumentTextIcon className="w-7 h-7 text-white" />
             </div>
             <div>

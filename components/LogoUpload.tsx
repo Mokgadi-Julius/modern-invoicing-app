@@ -52,12 +52,12 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, currentLog
   const displayPreview = preview || defaultLogoPlaceholder;
 
   return (
-    <div className="flex flex-col items-center space-y-3 p-4 border-2 border-dashed border-slate-600 rounded-lg bg-slate-700/50">
-      <div className="w-48 h-24 bg-slate-600 rounded flex items-center justify-center overflow-hidden">
+    <div className="flex flex-col items-center space-y-3 p-3 sm:p-4 border-2 border-dashed border-slate-600 rounded-lg bg-slate-700/50">
+      <div className="w-40 sm:w-48 h-20 sm:h-24 bg-slate-600 rounded flex items-center justify-center overflow-hidden">
         {displayPreview ? (
           <img src={displayPreview} alt="Logo Preview" className="max-w-full max-h-full object-contain" />
         ) : (
-          <span className="text-slate-400 text-sm">Logo Preview</span>
+          <span className="text-slate-400 text-xs sm:text-sm">Logo Preview</span>
         )}
       </div>
       <input
@@ -67,23 +67,23 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, currentLog
         ref={fileInputRef}
         className="hidden"
       />
-      <div className="flex space-x-3">
+      <div className="flex flex-col xs:flex-row space-y-2 xs:space-y-0 xs:space-x-3 w-full xs:w-auto">
         <button
           type="button"
           onClick={triggerFileInput}
-          className="flex items-center px-4 py-2 bg-sky-500 text-white text-sm font-medium rounded-md hover:bg-sky-600 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+          className="flex items-center justify-center px-3 sm:px-4 py-2 bg-sky-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-sky-600 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-400 focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[44px]"
         >
-          <UploadIcon className="w-4 h-4 mr-2" />
+          <UploadIcon className="w-4 h-4 mr-1 sm:mr-2" />
           {preview ? 'Change Logo' : 'Upload Logo'}
         </button>
         {preview && (
           <button
             type="button"
             onClick={handleRemoveLogo}
-            className="flex items-center px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-800"
+            className="flex items-center justify-center px-3 sm:px-4 py-2 bg-red-500 text-white text-xs sm:text-sm font-medium rounded-md hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-slate-800 min-h-[44px]"
             aria-label="Remove logo"
           >
-            <XCircleIcon className="w-4 h-4 mr-2" />
+            <XCircleIcon className="w-4 h-4 mr-1 sm:mr-2" />
             Remove
           </button>
         )}

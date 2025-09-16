@@ -75,9 +75,10 @@ export const AdminSetup: React.FC = () => {
         formData.setupKey
       );
       setSuccess(true);
+      // Redirect immediately since admin is auto-approved
       setTimeout(() => {
-        navigate('/');
-      }, 2000);
+        navigate('/dashboard');
+      }, 1500);
     } catch (error: any) {
       setError(error.message || 'Failed to create admin account');
     } finally {
@@ -120,7 +121,7 @@ export const AdminSetup: React.FC = () => {
             </div>
             <h1 className="text-2xl font-bold text-white mb-4">Admin Account Created!</h1>
             <p className="text-slate-400 mb-6">
-              Your admin account has been successfully created. You can now approve user registrations.
+              Your admin account has been successfully created and automatically approved. You can now access the dashboard and approve user registrations.
             </p>
             <p className="text-sm text-slate-500">
               Redirecting to dashboard...

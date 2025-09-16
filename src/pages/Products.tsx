@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
+import { useTheme, getThemeClasses } from '../contexts/ThemeContext';
 import type { ProductTemplate, LineItem } from '../types';
 import {
   PlusIcon,
@@ -14,17 +15,19 @@ import {
 import { format } from 'date-fns';
 
 export const Products: React.FC = () => {
-  const { 
-    products, 
-    addProduct, 
-    updateProduct, 
-    deleteProduct, 
-    productTemplates, 
-    addProductTemplate, 
-    updateProductTemplate, 
-    deleteProductTemplate, 
-    settings 
+  const {
+    products,
+    createProduct,
+    updateProduct,
+    deleteProduct,
+    productTemplates,
+    createProductTemplate,
+    updateProductTemplate,
+    deleteProductTemplate,
+    settings
   } = useApp();
+  const { theme } = useTheme();
+  const themeClasses = getThemeClasses(theme);
   const [activeTab, setActiveTab] = useState<'products' | 'templates'>('products');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddForm, setShowAddForm] = useState(false);
@@ -47,18 +50,18 @@ export const Products: React.FC = () => {
 
   const categories = ['Development', 'Design', 'Consulting', 'Management', 'Marketing', 'Other'];
 
-  const filteredProducts = products.filter(
+  const filteredProducts = products.filter((product) => product && product.id).filter(
     (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      product?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product?.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredTemplates = productTemplates.filter(
+  const filteredTemplates = productTemplates.filter((template) => template && template.id).filter(
     (template) =>
-      template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      template.category.toLowerCase().includes(searchTerm.toLowerCase())
+      template?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template?.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      template?.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatCurrency = (amount: number) => {
@@ -80,7 +83,7 @@ export const Products: React.FC = () => {
     setShowAddForm(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!formData.name || !formData.unitPrice) {
@@ -99,10 +102,10 @@ export const Products: React.FC = () => {
     if (editingProduct) {
       const product = products.find(p => p.id === editingProduct);
       if (product) {
-        updateProduct({ ...product, ...productData });
+        await updateProduct(product.id, productData);
       }
     } else {
-      addProduct(productData);
+      await createProduct(productData);
     }
 
     resetForm();
@@ -181,7 +184,7 @@ export const Products: React.FC = () => {
     }));
   };
 
-  const handleTemplateSubmit = (e: React.FormEvent) => {
+  const handleTemplateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!templateFormData.name || templateFormData.items.length === 0) {
@@ -205,7 +208,7 @@ export const Products: React.FC = () => {
         updateProductTemplate({ ...template, ...templateData });
       }
     } else {
-      addProductTemplate(templateData);
+      await createProductTemplate(templateData);
     }
 
     resetTemplateForm();
@@ -229,65 +232,65 @@ export const Products: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-700 text-slate-100 p-6">
+    <div className={`min-h-screen ${themeClasses.background} ${themeClasses.text.primary} p-6 transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white">Products & Services</h1>
-            <p className="text-slate-400 mt-1">
+            <h1 className={`text-2xl sm:text-3xl font-bold ${themeClasses.text.primary}`}>Products & Services</h1>
+            <p className={`${themeClasses.text.muted} mt-1 text-sm sm:text-base`}>
               Manage your catalog of products, services, and reusable templates.
             </p>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
             <button
               onClick={() => setShowAddForm(true)}
-              className={`px-6 py-3 rounded-lg font-medium flex items-center transition-colors ${
-                activeTab === 'products' 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium flex items-center justify-center transition-colors text-sm sm:text-base ${
+                activeTab === 'products'
+                  ? themeClasses.button.primary
+                  : themeClasses.button.secondary
               }`}
             >
-              <PlusIcon className="w-5 h-5 mr-2" />
+              <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Add Product
             </button>
             <button
               onClick={() => setShowTemplateForm(true)}
-              className={`px-6 py-3 rounded-lg font-medium flex items-center transition-colors ${
-                activeTab === 'templates' 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+              className={`px-4 py-2 sm:px-6 sm:py-3 rounded-lg font-medium flex items-center justify-center transition-colors text-sm sm:text-base ${
+                activeTab === 'templates'
+                  ? themeClasses.button.primary
+                  : themeClasses.button.secondary
               }`}
             >
-              <RectangleGroupIcon className="w-5 h-5 mr-2" />
+              <RectangleGroupIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Add Template
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-slate-800 rounded-xl p-1 mb-6 border border-slate-700">
-          <div className="flex space-x-1">
+        <div className={`${themeClasses.card} rounded-xl p-1 mb-6`}>
+          <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-1">
             <button
               onClick={() => setActiveTab('products')}
-              className={`flex-1 flex items-center justify-center py-3 px-4 rounded-lg font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                 activeTab === 'products'
                   ? 'bg-blue-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700'
               }`}
             >
-              <CubeIcon className="w-5 h-5 mr-2" />
+              <CubeIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Products ({products.length})
             </button>
             <button
               onClick={() => setActiveTab('templates')}
-              className={`flex-1 flex items-center justify-center py-3 px-4 rounded-lg font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg font-medium transition-colors text-sm sm:text-base ${
                 activeTab === 'templates'
                   ? 'bg-blue-600 text-white shadow-lg'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700'
               }`}
             >
-              <RectangleGroupIcon className="w-5 h-5 mr-2" />
+              <RectangleGroupIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               Templates ({productTemplates.length})
             </button>
           </div>
@@ -310,9 +313,9 @@ export const Products: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Product/Service Name <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -320,19 +323,19 @@ export const Products: React.FC = () => {
                       required
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                       placeholder="Enter product/service name"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Category
                     </label>
                     <select
                       value={formData.category}
                       onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                     >
                       <option value="">Select a category</option>
                       {categories.map((category) => (
@@ -344,7 +347,7 @@ export const Products: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Unit Price <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -354,13 +357,13 @@ export const Products: React.FC = () => {
                       step="0.01"
                       value={formData.unitPrice}
                       onChange={(e) => setFormData(prev => ({ ...prev, unitPrice: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                       placeholder="0.00"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Tax Rate (%)
                     </label>
                     <input
@@ -370,36 +373,36 @@ export const Products: React.FC = () => {
                       step="0.1"
                       value={formData.taxRate}
                       onChange={(e) => setFormData(prev => ({ ...prev, taxRate: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                       placeholder="0.0"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                     Description
                   </label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                     placeholder="Describe your product or service..."
                   />
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    className={`${themeClasses.button.secondary} px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    className={`${themeClasses.button.primary} px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base`}
                   >
                     {editingProduct ? 'Update Product' : 'Add Product'}
                   </button>
@@ -414,12 +417,12 @@ export const Products: React.FC = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-slate-800 rounded-xl p-6 w-full max-w-4xl border border-slate-700 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white">
                   {editingTemplate ? 'Edit Product Template' : 'Add New Product Template'}
                 </h2>
                 <button
                   onClick={resetTemplateForm}
-                  className="text-slate-400 hover:text-white"
+                  className="text-slate-400 hover:text-white p-1"
                 >
                   ✕
                 </button>
@@ -427,9 +430,9 @@ export const Products: React.FC = () => {
 
               <form onSubmit={handleTemplateSubmit} className="space-y-6">
                 {/* Basic Template Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Template Name <span className="text-red-400">*</span>
                     </label>
                     <input
@@ -437,19 +440,19 @@ export const Products: React.FC = () => {
                       required
                       value={templateFormData.name}
                       onChange={(e) => setTemplateFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                       placeholder="e.g., Pro Web Package"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                       Category
                     </label>
                     <select
                       value={templateFormData.category}
                       onChange={(e) => setTemplateFormData(prev => ({ ...prev, category: e.target.value }))}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
+                      className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                     >
                       <option value="">Select a category</option>
                       {categories.map((category) => (
@@ -462,35 +465,120 @@ export const Products: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-1 sm:mb-2">
                     Description
                   </label>
                   <textarea
                     value={templateFormData.description}
                     onChange={(e) => setTemplateFormData(prev => ({ ...prev, description: e.target.value }))}
                     rows={3}
-                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 px-3 sm:px-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
                     placeholder="Describe what's included in this template..."
                   />
                 </div>
 
                 {/* Template Items */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="block text-sm font-medium text-slate-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-300">
                       Template Items <span className="text-red-400">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={addTemplateItem}
-                      className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded flex items-center"
+                      className="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1.5 sm:px-3 sm:py-1 rounded flex items-center justify-center"
                     >
-                      <PlusIcon className="w-4 h-4 mr-1" />
+                      <PlusIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                       Add Item
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  {/* Mobile Card Layout for Template Items */}
+                  <div className="sm:hidden space-y-4">
+                    {templateFormData.items.map((item, index) => (
+                      <div key={item.id} className="bg-slate-700 p-4 rounded-lg border border-slate-600">
+                        <div className="mb-3">
+                          <label className="block text-xs font-medium text-slate-400 mb-1">
+                            Description
+                          </label>
+                          <div className="flex flex-col gap-2">
+                            <input
+                              type="text"
+                              value={item.description}
+                              onChange={(e) => updateTemplateItem(item.id, 'description', e.target.value)}
+                              className="w-full bg-slate-600 border border-slate-500 rounded py-2 px-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm"
+                              placeholder="Item description..."
+                            />
+                            {products.length > 0 && (
+                              <select
+                                onChange={(e) => selectProductForTemplateItem(item.id, e.target.value)}
+                                className="bg-slate-600 border border-slate-500 rounded py-2 px-3 text-white focus:outline-none focus:border-blue-500 text-sm"
+                                title="Select from products"
+                              >
+                                <option value="">Select Product</option>
+                                {products.map((product) => (
+                                  <option key={product.id} value={product.id}>
+                                    {product.name}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">
+                              Quantity
+                            </label>
+                            <input
+                              type="number"
+                              value={item.quantity}
+                              onChange={(e) => updateTemplateItem(item.id, 'quantity', e.target.value)}
+                              className="w-full bg-slate-600 border border-slate-500 rounded py-2 px-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">
+                              Unit Price
+                            </label>
+                            <input
+                              type="number"
+                              value={item.unitPrice}
+                              onChange={(e) => updateTemplateItem(item.id, 'unitPrice', e.target.value)}
+                              className="w-full bg-slate-600 border border-slate-500 rounded py-2 px-3 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm"
+                              min="0"
+                              step="0.01"
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center pt-2 border-t border-slate-600">
+                          <div>
+                            <label className="block text-xs font-medium text-slate-400 mb-1">
+                              Total
+                            </label>
+                            <div className="py-1 px-2 text-white font-medium text-sm">
+                              {formatCurrency(item.quantity * item.unitPrice)}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeTemplateItem(item.id)}
+                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-600 rounded transition-colors"
+                            disabled={templateFormData.items.length === 1}
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Desktop Grid Layout for Template Items */}
+                  <div className="hidden sm:block space-y-3">
                     {templateFormData.items.map((item, index) => (
                       <div key={item.id} className="grid grid-cols-12 gap-3 items-end bg-slate-700 p-3 rounded-lg">
                         <div className="col-span-5">
@@ -571,10 +659,10 @@ export const Products: React.FC = () => {
 
                   {/* Template Total */}
                   <div className="flex justify-end mt-4">
-                    <div className="bg-slate-700 rounded-lg p-3">
+                    <div className="bg-slate-700 rounded-lg p-3 sm:p-4">
                       <div className="text-right">
-                        <p className="text-slate-400 text-sm">Template Total</p>
-                        <p className="text-white font-bold text-lg">
+                        <p className="text-slate-400 text-xs sm:text-sm">Template Total</p>
+                        <p className="text-white font-bold text-lg sm:text-xl">
                           {formatCurrency(
                             templateFormData.items.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0)
                           )}
@@ -584,17 +672,17 @@ export const Products: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-4 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4">
                   <button
                     type="button"
                     onClick={resetTemplateForm}
-                    className="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    className={`${themeClasses.button.secondary} px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base`}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                    className={`${themeClasses.button.primary} px-4 py-2.5 sm:px-6 sm:py-3 rounded-lg font-medium transition-colors text-sm sm:text-base`}
                   >
                     {editingTemplate ? 'Update Template' : 'Create Template'}
                   </button>
@@ -605,7 +693,7 @@ export const Products: React.FC = () => {
         )}
 
         {/* Search */}
-        <div className="bg-slate-800 rounded-xl p-6 border border-slate-700 mb-6">
+        <div className={`${themeClasses.card} rounded-xl p-4 sm:p-6 mb-6`}>
           <div className="relative">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
@@ -613,13 +701,13 @@ export const Products: React.FC = () => {
               placeholder="Search products and services..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg py-3 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg py-2.5 sm:py-3 pl-10 pr-4 text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 text-sm sm:text-base"
             />
           </div>
         </div>
 
         {/* Content Grid */}
-        <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+        <div className={`${themeClasses.card} rounded-xl overflow-hidden`}>
           {activeTab === 'products' ? (
             // Products Content
             filteredProducts.length === 0 ? (
@@ -640,9 +728,67 @@ export const Products: React.FC = () => {
                 {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className="p-6 hover:bg-slate-750 transition-colors"
+                  className="p-4 sm:p-6 hover:bg-slate-750 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
+                  {/* Mobile Card Layout */}
+                  <div className="sm:hidden">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start space-x-3 flex-1">
+                        <div className="w-10 h-10 bg-blue-500 bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <CubeIcon className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <h3 className="font-semibold text-white text-sm truncate">
+                              {product.name}
+                            </h3>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 flex-shrink-0">
+                              <TagIcon className="w-2.5 h-2.5 mr-1" />
+                              {product.category}
+                            </span>
+                          </div>
+                          {product.description && (
+                            <p className="text-slate-400 text-xs mb-2 line-clamp-2">
+                              {product.description}
+                            </p>
+                          )}
+                          <div className="flex items-center space-x-3 text-xs text-slate-500">
+                            <span>Tax: {product.taxRate}%</span>
+                            <span>Added {format(new Date(product.createdAt), 'MMM dd')}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col items-end ml-3">
+                        <div className="text-right">
+                          <div className="font-bold text-white text-sm">
+                            {formatCurrency(product.unitPrice)}
+                          </div>
+                          <div className="text-xs text-slate-400">per unit</div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-1 mt-2">
+                          <button
+                            onClick={() => handleEdit(product)}
+                            className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded transition-colors"
+                            title="Edit product"
+                          >
+                            <PencilIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(product.id)}
+                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
+                            title="Delete product"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Desktop Layout */}
+                  <div className="hidden sm:flex items-center justify-between">
                     <div className="flex items-center space-x-4 flex-1">
                       <div className="w-12 h-12 bg-blue-500 bg-opacity-20 rounded-lg flex items-center justify-center">
                         <CubeIcon className="w-6 h-6 text-blue-400" />
@@ -719,9 +865,83 @@ export const Products: React.FC = () => {
                 {filteredTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="p-6 hover:bg-slate-750 transition-colors"
+                    className="p-4 sm:p-6 hover:bg-slate-750 transition-colors"
                   >
-                    <div className="flex items-start justify-between">
+                    {/* Mobile Card Layout */}
+                    <div className="sm:hidden">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start space-x-3 flex-1">
+                          <div className="w-10 h-10 bg-purple-500 bg-opacity-20 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <RectangleGroupIcon className="w-5 h-5 text-purple-400" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <h3 className="font-semibold text-white text-sm truncate">
+                                {template.name}
+                              </h3>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300 flex-shrink-0">
+                                <TagIcon className="w-2.5 h-2.5 mr-1" />
+                                {template.category}
+                              </span>
+                            </div>
+                            {template.description && (
+                              <p className="text-slate-400 text-xs mb-2 line-clamp-2">
+                                {template.description}
+                              </p>
+                            )}
+                            
+                            <div className="space-y-1 mb-2">
+                              <p className="text-xs font-medium text-slate-300">Includes:</p>
+                              {template.items.slice(0, 2).map((item, index) => (
+                                <div key={index} className="text-xs text-slate-400 flex justify-between">
+                                  <span className="truncate">• {item.description}</span>
+                                  <span className="flex-shrink-0 ml-2">{item.quantity} × {formatCurrency(item.unitPrice)}</span>
+                                </div>
+                              ))}
+                              {template.items.length > 2 && (
+                                <div className="text-xs text-slate-500">
+                                  +{template.items.length - 2} more items...
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center space-x-3 text-xs text-slate-500">
+                              <span>{template.items.length} items</span>
+                              <span>Created {format(new Date(template.createdAt), 'MMM dd')}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-end ml-3">
+                          <div className="text-right mb-2">
+                            <div className="font-bold text-white text-sm">
+                              {formatCurrency(template.totalPrice)}
+                            </div>
+                            <div className="text-xs text-slate-400">total package</div>
+                          </div>
+                          
+                          <div className="flex items-center space-x-1">
+                            <button
+                              onClick={() => handleEditTemplate(template)}
+                              className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded transition-colors"
+                              title="Edit template"
+                            >
+                              <PencilIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTemplate(template.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
+                              title="Delete template"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Desktop Layout */}
+                    <div className="hidden sm:flex items-start justify-between">
                       <div className="flex items-start space-x-4 flex-1">
                         <div className="w-12 h-12 bg-purple-500 bg-opacity-20 rounded-lg flex items-center justify-center">
                           <RectangleGroupIcon className="w-6 h-6 text-purple-400" />
@@ -797,59 +1017,59 @@ export const Products: React.FC = () => {
 
         {/* Summary */}
         {((activeTab === 'products' && products.length > 0) || (activeTab === 'templates' && productTemplates.length > 0)) && (
-          <div className="mt-6 bg-slate-800 rounded-xl p-6 border border-slate-700">
+          <div className={`mt-6 ${themeClasses.card} rounded-xl p-4 sm:p-6`}>
             {activeTab === 'products' ? (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">{products.length}</p>
-                  <p className="text-slate-400 text-sm">Total Products</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{products.length}</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Total Products</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {formatCurrency(
                       products.reduce((sum, product) => sum + product.unitPrice, 0) / products.length || 0
                     )}
                   </p>
-                  <p className="text-slate-400 text-sm">Average Price</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Average Price</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {new Set(products.map(p => p.category)).size}
                   </p>
-                  <p className="text-slate-400 text-sm">Categories</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Categories</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {formatCurrency(Math.max(...products.map(p => p.unitPrice)))}
                   </p>
-                  <p className="text-slate-400 text-sm">Highest Price</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Highest Price</p>
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">{productTemplates.length}</p>
-                  <p className="text-slate-400 text-sm">Total Templates</p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">{productTemplates.length}</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Total Templates</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {formatCurrency(
                       productTemplates.reduce((sum, template) => sum + template.totalPrice, 0) / productTemplates.length || 0
                     )}
                   </p>
-                  <p className="text-slate-400 text-sm">Average Value</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Average Value</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {new Set(productTemplates.map(t => t.category)).size}
                   </p>
-                  <p className="text-slate-400 text-sm">Categories</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Categories</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-white">
+                <div className="text-center p-3 sm:p-4 bg-slate-750 rounded-lg">
+                  <p className="text-xl sm:text-2xl font-bold text-white">
                     {formatCurrency(Math.max(...productTemplates.map(t => t.totalPrice)))}
                   </p>
-                  <p className="text-slate-400 text-sm">Highest Value</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">Highest Value</p>
                 </div>
               </div>
             )}
